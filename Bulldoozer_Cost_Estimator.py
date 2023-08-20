@@ -1,32 +1,32 @@
 
-""" Calculation of heavy equipment Cost for a particular activity"""
+""" Calculation of bulldozer's Cost for a particular activity"""
 
 import numpy as np
 import math
 
+""" NOTE!: IF YOU RENT THE MACHINE AND IT'S NOT YOUR PWN EQUIPMENT, PLEASE DON'T INSERT INFORMATION OF THE MACHINE OWNERS
+ AND JUST PUT 0 """
 
 activity = input("Insert the title of the activity:\n\n")
-machine_type = input("Insert the type of machine:\n\n")
 manufacturer = input("Insert the manufacturer name of machine:\n\n")
 model_name = input("Insert the model name of machine:\n\n")
 delivered_price_dollars = float(input("Please enter delivered price of machine in $ "
-                                      "(including taxes, freight, and installation)):\n"))
+                                      "(including taxes, freight, and installation)):\n")) 
 sales_tax_percent = float(input("Please enter sale's tax percent of machine in %:\n"))
 interest_percent = float(input("Please enter interest percent of machine in %:\n"))   # Interest on the investment
-insurance_percent= float(input("Please enter insurance percent of machine in %:\n"))
-tax_percent= float(input("Please enter annually tax percent of machine in %:\n"))
-work_hours= int(input("Please enter the number of hours that machine has worked:\n"))
-capacity_crankcase_gallon= float(input("Please enter crankcase capacity of machine in gallon:\n"))
+insurance_percent = float(input("Please enter insurance percent of machine in %:\n"))
+tax_percent = float(input("Please enter annually tax percent of machine in %:\n"))
+work_hours = int(input("Please enter the number of hours that machine has worked:\n"))
+capacity_crankcase_gallon = float(input("Please enter crankcase capacity of machine in gallon:\n"))
 hours_lubricating_changes = float(input("Please enter hours between lubricating changes of machine:\n"))
 fuel_price = float(input("Please insert price of per gallon of fuel $:\n"))
-lubricant_price = float(input("Please insert cost of lubricating ($):\n\n"))
-operator_wage = float(input("Please enter operator wage per hour($):\n\n"))
-rental_hourly_cost = float(input("Please enter rental cost per hour($):\n\n"))
+lubricant_price = float(input("Please insert cost of lubricating ($):\n"))
+operator_wage = float(input("Please enter operator wage per hour($):\n"))
+rental_hourly_cost = float(input("Please enter rental cost per hour($):\n"))
 tire_price = float(input("Please insert total price of tires($):\n"))
-temperature = int(input("Insert the mean of the temperature in duration of doing activity (C) :\n\n"))
-altitude = int(input("Insert the mean of the elevation of the job site (m) :\n\n"))
-power = int(input("Insert the power of the bulldozer (hp):\n\n"))
-load_factor = input("Please insert loader application:\n(a) 'low'\n(b) 'medium'\n(c) 'high'\n\n ")
+temperature = int(input("Insert the mean of the temperature in duration of doing activity (C) (-88 to +58) :\n"))
+altitude = int(input("Insert the mean of the elevation of the job site (m) (0-3000 m):\n"))
+power = int(input("Insert the power of the bulldozer (hp):\n"))
 
 # ******************************************** OWNERSHIP COSTS *********************************************************
 
@@ -38,16 +38,15 @@ def depreciation_value(sales_tax_percent):
 
 def machine_name(manufacturer, model_name):
     """ Define the fullname of machine as:
-    Mnufacturer's name + Tractor's model name + type of blade of bulldozer (S( Straight blade), U( Universal blade), SU(Semi U),...)"""
+    Manufacturer's name + Tractor's model name + type of blade of bulldozer (S( Straight blade), U( Universal blade), SU(Semi U),...)"""
     manufacturer_case = manufacturer.upper()
     model_case = model_name.upper()
-    machine_type_case = machine_type.upper()
-    machinename = f'{machine_type_case} {manufacturer_case} {model_case}'
+    machinename = f' {manufacturer_case} {model_case}'
     return machinename
 
 
 def depreciation(expected_use = 20000):
-    """ Depreciation represents the decline in market value of a piece of equipment due to age, wear,
+    """ Depreciation represents the decline in the market value of a piece of equipment due to age, wear,
         deterioration, and obsolescence."""
     depreciations = depreciation_value(sales_tax_percent) / expected_use
     return depreciations
@@ -118,37 +117,8 @@ def tire_repair_replacement_costs():
     else:
         expected_tirelife.append(750)
 
-    tire_repair_replacement_costss = tire_price / np.array(expected_tirelife)
-    return np.round(tire_repair_replacement_costss, 2)
-
-
-def manual_fuel_consumption_factor():
-    work_condition = input("Please insert work condition:\n(a) 'Favorable'\n(b) 'Average'\n(c) 'Unfavorable'\n\n ")
-    max_fuel_consumption_factor = []
-
-    if work_condition == 'a':
-        max_fuel_consumption_factor.append(0.028)
-
-    elif work_condition == 'b':
-        max_fuel_consumption_factor.append(0.038)
-
-    else:
-        max_fuel_consumption_factor.append(0.052)
-    return np.array(max_fuel_consumption_factor)
-
-
-def manual_load_factor():
-    max_load_factor = []
-
-    if load_factor == 'a':
-        max_load_factor.append(0.5)
-
-    elif load_factor == 'b':
-        max_load_factor.append(0.65)
-
-    else:
-        max_load_factor.append(0.8)
-    return np.array(max_load_factor)
+    tire_replacement_costs = tire_price / np.array(expected_tirelife)
+    return np.round(tire_replacement_costs, 2)
 
 
 def height_air_pressure(altitude):
@@ -173,23 +143,51 @@ def real_power():
     return real_power
 
 
+def manual_fuel_consumption(load_factor=0.58):
+    power_interval = []
+    power_interval.append(real_power())
+    break_fuel_consumption_rate = []
+
+    for PI in power_interval:   # PI is in KW and break fuel consumption rate is in Kg/KW.hr. --->
+        # SOURCE : US EPA, (2010)
+
+        if PI < 18:
+            break_fuel_consumption_rate.append(0.271)
+
+        elif 18 < PI < 37:
+            break_fuel_consumption_rate.append(0.269)
+
+        elif 37 < PI < 75:
+            break_fuel_consumption_rate.append(0.265)
+
+        elif 75 < PI < 130:
+            break_fuel_consumption_rate.append(0.260)
+
+        else:
+            break_fuel_consumption_rate.append(0.254)
+
+    # 0.26 is convert factor of fuel consumption in Kg to gallon
+    fuel = load_factor * np.array(break_fuel_consumption_rate) * real_power() * 0.26
+    return fuel
+
+
 def manual_fuel_consumption_cost():
-    fuel_consumption_cost = manual_fuel_consumption_factor() * manual_load_factor() * fuel_price * real_power()
-    return(fuel_consumption_cost)
+    fuel_consumption_cost = manual_fuel_consumption() * fuel_price
+    return fuel_consumption_cost
 
 
-def Lubricating_oil_cost():
-    quantity_of_oil_required = real_power()* manual_load_factor()
-    Lubricating_Cost = (((0.006 * quantity_of_oil_required) / 7.4) +
+def Lubricating_oil_cost(load_factor):
+    quantity_of_oil_required = real_power() * load_factor
+    lubricating_cost = (((0.006 * quantity_of_oil_required) / 7.4) +
                              (capacity_crankcase_gallon / hours_lubricating_changes))\
-                            * lubricant_price
+                                * lubricant_price
 
-    return np.round(Lubricating_Cost, 2)
+    return np.round(lubricating_cost, 2)
 
 
-def operating_cost_per_hour():
+def operating_cost_per_hour(load_factor = 0.58):
     operating_costs_per_hour = hourly_repair_cost() + tire_repair_replacement_costs() +\
-                               manual_fuel_consumption_cost() + Lubricating_oil_cost()
+                               manual_fuel_consumption_cost() + Lubricating_oil_cost(load_factor)
     return np.round(operating_costs_per_hour, 2)
 
 
@@ -197,12 +195,13 @@ def total_cost_per_hour():
     total_hourly_cost = total_hourly_ownership_cost() + operating_cost_per_hour() + operator_wage + rental_hourly_cost
     print(print(f'"Total cost of {machine_name(manufacturer, model_name)}" during doing '
                 f'"{activity}" is "{np.round(total_hourly_cost[0], 2)}" $'))
-    return (np.round(total_hourly_cost, 2))
+    return np.round(total_hourly_cost, 2)
 
 
 def main():
 
     return total_cost_per_hour()
+
 
 if __name__ == "__main__":
     main()
