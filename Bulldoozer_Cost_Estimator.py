@@ -4,8 +4,8 @@
 import numpy as np
 import math
 
-""" NOTE!: IF YOU RENT THE MACHINE AND IT'S NOT YOUR PWN EQUIPMENT, PLEASE DON'T INSERT INFORMATION OF THE MACHINE OWNERS
- AND JUST PUT 0 """
+""" NOTE!: IF YOU RENT THE MACHINE AND IT'S NOT YOUR OWN EQUIPMENT, PLEASE DON'T INSERT INFORMATION OF THE MACHINE OWNERS
+ AND JUST PUT '0' """
 
 activity = input("Insert the title of the activity:\n\n")
 manufacturer = input("Insert the manufacturer name of machine:\n\n")
